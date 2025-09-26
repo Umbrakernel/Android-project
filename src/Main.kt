@@ -3,15 +3,14 @@ fun main() {
         Human("Иванов Иван Иванович", 25, 1.2),
         Human("Петров Петр Петрович", 30, 1.5),
         Human("Сидоров Сидор Сидорович", 20, 1.0),
-        Driver("Смирнов Алексей Сергеевич", 28, 2.0, 1.0, 0.0) // двигается по оси X
+        Driver("Смирнов Алексей Сергеевич", 28, 2.0, 1.0, 0.0)
     )
 
-    val simulationTime = 5 // секунд
-    val deltaTime = 1.0    // шаг времени (1 секунда)
+    val simulationTime = 5
+    val deltaTime = 1.0
 
     println("=== Начало симуляции ===")
 
-    // Поток для каждого Human/Driver
     val threads = humans.map { human ->
         Thread {
             for (t in 1..simulationTime) {
@@ -22,9 +21,7 @@ fun main() {
         }
     }
 
-    // Запуск всех потоков
     threads.forEach { it.start() }
-    // Ждём завершения всех
     threads.forEach { it.join() }
 
     println("=== Конец симуляции ===")
