@@ -1,29 +1,28 @@
 fun main() {
-    val humans = arrayOf(
+    val humans = listOf(
         Human("Иванов Иван Иванович", 25, 1.2),
         Human("Петров Петр Петрович", 30, 1.5),
         Human("Сидоров Сидор Сидорович", 20, 1.0),
-        Human("Смирнов Алексей Сергеевич", 28, 1.3),
-        Human("Кузнецов Дмитрий Олегович", 22, 1.1),
-        Human("Попов Николай Викторович", 26, 1.4),
-        Human("Васильев Павел Андреевич", 31, 1.2),
-        Human("Новиков Андрей Борисович", 19, 0.9),
-        Human("Фёдоров Михаил Иванович", 24, 1.6),
-        Human("Морозов Артём Евгеньевич", 29, 1.3),
-        Human("Волков Сергей Петрович", 27, 1.2)
+        Driver("Смирнов Алексей Сергеевич", 28, 2.0, 1.0, 0.0)
     )
 
-    val simulationTime = 10 // секунд
+    val simulationTime = 5
     val deltaTime = 1.0
 
     println("=== Начало симуляции ===")
-    for (t in 1..simulationTime) {
-        println("Время: $t с")
-        for (human in humans) {
-            human.move(deltaTime)
-            println(human)
+
+    val threads = humans.map { human ->
+        Thread {
+            for (t in 1..simulationTime) {
+                human.move(deltaTime)
+                println("[${Thread.currentThread().name}] $human")
+                Thread.sleep((deltaTime * 1000).toLong())
+            }
         }
-        println("---------------------------")
     }
+
+    threads.forEach { it.start() }
+    threads.forEach { it.join() }
+
     println("=== Конец симуляции ===")
 }
