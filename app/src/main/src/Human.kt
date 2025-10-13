@@ -6,12 +6,11 @@ import kotlin.math.PI
 open class Human(
     private var fullName: String,
     private var age: Int,
-    protected var speed: Double // свойство, Kotlin сам сделает getSpeed()/setSpeed()
-) {
-    protected var x: Double = 0.0
-    protected var y: Double = 0.0
+    override var speed: Double
+) : Movable {
+    override var x: Double = 0.0
+    override var y: Double = 0.0
 
-    // Публичные readonly-свойства для main()
     val posX: Double get() = x
     val posY: Double get() = y
 
@@ -21,7 +20,7 @@ open class Human(
     fun getAge(): Int = age
     fun setAge(a: Int) { age = a }
 
-    open fun move(deltaTime: Double = 1.0) {
+    override fun move(deltaTime: Double) {
         val angle = Random.nextDouble(0.0, 2 * PI)
         val dx = speed * deltaTime * cos(angle)
         val dy = speed * deltaTime * sin(angle)
