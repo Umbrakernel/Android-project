@@ -24,13 +24,12 @@ class MainActivity : AppCompatActivity() {
             val calculatorIntent = Intent(this, CalculatorActivity::class.java)
             startActivity(calculatorIntent)
         })
-        /*
         val bGoToPlayer: Button = findViewById(R.id.bGoToPlayer)
         bGoToPlayer.setOnClickListener({
-            val playerIntent = Intent(this, PlayerActivity::class.java)
+            val playerIntent = Intent(this, MediaPlayerActivity::class.java)
             startActivity(playerIntent)
         })
-
+        /*
         val bGoToViews: Button = findViewById(R.id.bGoToViews)
         bGoToViews.setOnClickListener({
             val viewsIntent = Intent(this, ViewsActivity::class.java)
