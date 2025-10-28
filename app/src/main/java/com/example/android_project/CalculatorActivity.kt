@@ -3,169 +3,58 @@ package com.example.android_project
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 
 class CalculatorActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_calculator)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.calculator)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+        val display: TextView = findViewById(R.id.display)
+
+        findViewById<Button>(R.id.button_one).setOnClickListener { addToDisplay("1", display) }
+        findViewById<Button>(R.id.button_two).setOnClickListener { addToDisplay("2", display) }
+        findViewById<Button>(R.id.button_three).setOnClickListener { addToDisplay("3", display) }
+        findViewById<Button>(R.id.button_four).setOnClickListener { addToDisplay("4", display) }
+        findViewById<Button>(R.id.button_five).setOnClickListener { addToDisplay("5", display) }
+        findViewById<Button>(R.id.button_six).setOnClickListener { addToDisplay("6", display) }
+        findViewById<Button>(R.id.button_seven).setOnClickListener { addToDisplay("7", display) }
+        findViewById<Button>(R.id.button_eight).setOnClickListener { addToDisplay("8", display) }
+        findViewById<Button>(R.id.button_nine).setOnClickListener { addToDisplay("9", display) }
+        findViewById<Button>(R.id.button_null).setOnClickListener { addToDisplay("0", display) }
+
+        findViewById<Button>(R.id.button_plus).setOnClickListener { addToDisplay("+", display) }
+        findViewById<Button>(R.id.button_minus).setOnClickListener { addToDisplay("-", display) }
+        findViewById<Button>(R.id.button_multiply).setOnClickListener { addToDisplay("*", display) }
+        findViewById<Button>(R.id.button_divide).setOnClickListener { addToDisplay("/", display) }
+        findViewById<Button>(R.id.button_point).setOnClickListener { addToDisplay(".", display) }
+
+        findViewById<Button>(R.id.button_clear).setOnClickListener {
+            display.text = "0"
         }
-        var Display: TextView = findViewById(R.id.display)
-        Display.text = "0"
 
-        var currentNumber = ""
-        var firstNumber = ""
-        var operation = ""
+        findViewById<Button>(R.id.button_equal).setOnClickListener {
+            val result = eval(display.text.toString())
+            display.text = result.toString()
+        }
+    }
 
-        var one: Button = findViewById(R.id.button_one)
-        one.setOnClickListener({
-            currentNumber += "1"
-            Display.setText(currentNumber)
-        })
+    private fun addToDisplay(text: String, display: TextView) {
+        if (display.text == "0") {
+            display.text = text
+        } else {
+            display.text = display.text.toString() + text
+        }
+    }
 
-        var two: Button = findViewById(R.id.button_two)
-        two.setOnClickListener({
-            currentNumber += "2"
-            Display.setText(currentNumber)
-        })
-
-        var three: Button = findViewById(R.id.button_three)
-        three.setOnClickListener({
-            currentNumber += "3"
-            Display.setText(currentNumber)
-        })
-
-        var four: Button = findViewById(R.id.button_four)
-        four.setOnClickListener({
-            currentNumber += "4"
-            Display.setText(currentNumber)
-        })
-
-        var five: Button = findViewById(R.id.button_five)
-        five.setOnClickListener({
-            currentNumber += "5"
-            Display.setText(currentNumber)
-        })
-
-        var six: Button = findViewById(R.id.button_six)
-        six.setOnClickListener({
-            currentNumber += "6"
-            Display.setText(currentNumber)
-        })
-
-        var seven: Button = findViewById(R.id.button_seven)
-        seven.setOnClickListener({
-            currentNumber += "7"
-            Display.setText(currentNumber)
-        })
-
-        var eight: Button = findViewById(R.id.button_eight)
-        eight.setOnClickListener({
-            currentNumber += "8"
-            Display.setText(currentNumber)
-        })
-
-        var nine: Button = findViewById(R.id.button_nine)
-        nine.setOnClickListener({
-            currentNumber += "9"
-            Display.setText(currentNumber)
-        })
-
-        var nulle: Button = findViewById(R.id.button_null)
-        nulle.setOnClickListener({
-            currentNumber += "0"
-            Display.setText(currentNumber)
-        })
-
-        var plus: Button = findViewById(R.id.button_plus)
-        plus.setOnClickListener({
-            if (currentNumber != "") {
-                firstNumber = currentNumber
-                currentNumber = ""
-                operation = "+"
-                Display.setText("+")
-            }
-        })
-
-        var minus: Button = findViewById(R.id.button_minus)
-        minus.setOnClickListener({
-            if (currentNumber != "") {
-                firstNumber = currentNumber
-                currentNumber = ""
-                operation = "-"
-                Display.setText("-")
-            }
-        })
-
-        var multiply: Button = findViewById(R.id.button_multiply)
-        multiply.setOnClickListener({
-            if (currentNumber != "") {
-                firstNumber = currentNumber
-                currentNumber = ""
-                operation = "*"
-                Display.setText("*")
-            }
-        })
-
-        var divide: Button = findViewById(R.id.button_divide)
-        divide.setOnClickListener({
-            if (currentNumber != "") {
-                firstNumber = currentNumber
-                currentNumber = ""
-                operation = "/"
-                Display.setText("/")
-            }
-        })
-
-        var point: Button = findViewById(R.id.button_point)
-        point.setOnClickListener({
-            if (!currentNumber.contains(".")) {
-                if (currentNumber == "") {
-                    currentNumber = "0."
-                } else {
-                    currentNumber += "."
-                }
-                Display.setText(currentNumber)
-            }
-        })
-
-        var equal: Button = findViewById(R.id.button_equal)
-        equal.setOnClickListener({
-            if (firstNumber != "" && currentNumber != "" && operation != "") {
-                var result = 0.0
-                when (operation) {
-                    "+" -> result = firstNumber.toDouble() + currentNumber.toDouble()
-                    "-" -> result = firstNumber.toDouble() - currentNumber.toDouble()
-                    "*" -> result = firstNumber.toDouble() * currentNumber.toDouble()
-                    "/" -> result = firstNumber.toDouble() / currentNumber.toDouble()
-                }
-
-                if (result % 1 == 0.0) {
-                    Display.setText(result.toInt().toString())
-                } else {
-                    Display.setText(result.toString())
-                }
-
-                firstNumber = ""
-                currentNumber = Display.text.toString()
-                operation = ""
-            }
-        })
-
-        var clear: Button = findViewById(R.id.button_clear)
-        clear.setOnClickListener({
-            currentNumber = ""
-            firstNumber = ""
-            operation = ""
-            Display.setText("0")
-        })
+    private fun eval(str: String): Double {
+        return when {
+            "+" in str -> str.split("+")[0].toDouble() + str.split("+")[1].toDouble()
+            "-" in str -> str.split("-")[0].toDouble() - str.split("-")[1].toDouble()
+            "*" in str -> str.split("*")[0].toDouble() * str.split("*")[1].toDouble()
+            "/" in str -> str.split("/")[0].toDouble() / str.split("/")[1].toDouble()
+            else -> str.toDouble()
+        }
     }
 }
