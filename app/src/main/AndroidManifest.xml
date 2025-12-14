@@ -2,6 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Разрешения локации -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- Разрешение для плеера -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <application
@@ -13,6 +18,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Androidproject">
+
+        <activity
+            android:name=".LocationActivity"
+            android:exported="false" />
         <activity
             android:name=".MediaPlayerActivity"
             android:exported="false" />
@@ -21,13 +30,13 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".CalculatorActivity"
             android:exported="false" />
+
     </application>
 
 </manifest>
