@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
+import android.provider.MediaStore
+import android.content.ContentUris
+import android.net.Uri
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -14,131 +16,181 @@ import java.io.File
 
 class MediaPlayerActivity : AppCompatActivity() {
 
-    var log_tag: String = "MY_LOG_TAG"
     lateinit var mediaPlayer: MediaPlayer
     lateinit var tracksListView: ListView
-    lateinit var playButton: Button
-    lateinit var pauseButton: Button
     lateinit var seekBar: SeekBar
     lateinit var volumeSeekBar: SeekBar
+    lateinit var albumArtImageView: ImageView
 
-    var audioFiles = mutableListOf<File>()
+    val audioFiles = ArrayList<File>()
+    var currentIndex = 0
     val handler = Handler(Looper.getMainLooper())
+
+    val permLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { ok ->
+        if (ok) loadMusic() else Toast.makeText(this, "Нет разрешения", Toast.LENGTH_SHORT).show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media_player)
 
-        tracksListView = findViewById(R.id.tracksListView)
-        playButton = findViewById(R.id.playButton)
-        pauseButton = findViewById(R.id.pauseButton)
-        seekBar = findViewById(R.id.seekBar)
-        volumeSeekBar = findViewById(R.id.volumeSeekBar)
-
         mediaPlayer = MediaPlayer()
 
-        val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                playMusic()
-                Toast.makeText(this, "Permission Granted", Toast.LENGTH_LONG).show()
-            } else {
-                Toast.makeText(this, "Please grant permission", Toast.LENGTH_LONG).show()
-            }
-        }
-        requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO)
+        val playButton: Button = findViewById(R.id.playButton)
+        val pauseButton: Button = findViewById(R.id.pauseButton)
+        val nextButton: Button = findViewById(R.id.nextButton)
+        val prevButton: Button = findViewById(R.id.prevButton)
 
-        setupClickListeners()
-    }
+        seekBar = findViewById(R.id.seekBar)
+        volumeSeekBar = findViewById(R.id.volumeSeekBar)
+        tracksListView = findViewById(R.id.tracksListView)
+        albumArtImageView = findViewById(R.id.albumArtImageView)
 
-    fun setupClickListeners() {
-        playButton.setOnClickListener { playAudio() }
-        pauseButton.setOnClickListener { pauseAudio() }
+        playButton.setOnClickListener { playMusic() }
+        pauseButton.setOnClickListener { pauseMusic() }
+        nextButton.setOnClickListener { nextTrack() }
+        prevButton.setOnClickListener { prevTrack() }
 
-        tracksListView.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+        tracksListView.setOnItemClickListener { _, _, position, _ ->
             playTrack(position)
         }
 
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (fromUser) mediaPlayer.seekTo(progress)
             }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
         })
 
         volumeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    val volume = progress / 100.0f
-                    mediaPlayer.setVolume(volume, volume)
-                }
+            override fun onProgressChanged(sb: SeekBar, progress: Int, fromUser: Boolean) {
+                mediaPlayer.setVolume(progress / 100f, progress / 100f)
             }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStartTrackingTouch(sb: SeekBar) {}
+            override fun onStopTrackingTouch(sb: SeekBar) {}
         })
+
+        permLauncher.launch(Manifest.permission.READ_MEDIA_AUDIO)
     }
 
-    fun playMusic(){
-        var musicPath: String = Environment.getExternalStorageDirectory().path + "/Music"
+    fun loadMusic() {
+        val path = Environment.getExternalStorageDirectory().absolutePath + "/Music"
+        val folder = File(path)
 
-        Log.d(log_tag, "PATH: " + musicPath)
-        var directory: File = File(musicPath)
-
-        if (directory.exists() && directory.isDirectory) {
-            directory.listFiles()?.forEach { file ->
-                if (file.isFile && file.name.endsWith(".mp3")) {
-                    audioFiles.add(file)
-                    Log.d(log_tag, "Found MP3: " + file.name)
+        val list = folder.listFiles()
+        if (list != null) {
+            for (f in list) {
+                if (f.isFile && f.name.endsWith(".mp3")) {
+                    audioFiles.add(f)
                 }
             }
-
-            if (audioFiles.isNotEmpty()) {
-                showTracksList()
-            } else {
-                Toast.makeText(this, "No MP3 files found", Toast.LENGTH_LONG).show()
-            }
-        } else {
-            Toast.makeText(this, "Music directory not found", Toast.LENGTH_LONG).show()
         }
-    }
 
-    fun showTracksList() {
-        val trackNames = audioFiles.map { it.nameWithoutExtension }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, trackNames)
+        bubbleSort()
+
+        val names = ArrayList<String>()
+        for (f in audioFiles) {
+            names.add(f.nameWithoutExtension)
+        }
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, names)
         tracksListView.adapter = adapter
     }
 
-    fun playTrack(position: Int) {
-        mediaPlayer.reset()
-        mediaPlayer.setDataSource(audioFiles[position].absolutePath)
-        mediaPlayer.prepareAsync()
-
-        mediaPlayer.setOnPreparedListener {
-            seekBar.max = mediaPlayer.duration
-            playAudio()
+    fun bubbleSort() {
+        for (i in 0 until audioFiles.size - 1) {
+            for (j in 0 until audioFiles.size - i - 1) {
+                if (audioFiles[j].name > audioFiles[j + 1].name) {
+                    val tmp = audioFiles[j]
+                    audioFiles[j] = audioFiles[j + 1]
+                    audioFiles[j + 1] = tmp
+                }
+            }
         }
     }
 
-    fun playAudio() {
-        mediaPlayer.start()
-        updateSeekBar()
+    fun playTrack(position: Int) {
+        try {
+            currentIndex = position
+            mediaPlayer.reset()
+            mediaPlayer.setDataSource(audioFiles[position].absolutePath)
+            mediaPlayer.prepare()
+            mediaPlayer.start()
+
+            seekBar.max = mediaPlayer.duration
+            updateSeek()
+
+            setAlbumArt(audioFiles[position])
+
+        } catch (e: Exception) {
+            Toast.makeText(this, "Ошибка при воспроизведении", Toast.LENGTH_SHORT).show()
+        }
     }
 
-    fun pauseAudio() {
-        mediaPlayer.pause()
+    fun setAlbumArt(file: File) {
+        val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        val projection = arrayOf(MediaStore.Audio.Media.ALBUM_ID)
+        val selection = "${MediaStore.Audio.Media.DATA}=?"
+        val selectionArgs = arrayOf(file.absolutePath)
+
+        val cursor = contentResolver.query(uri, projection, selection, selectionArgs, null)
+
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val index = it.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
+
+                if (index >= 0) {
+                    val albumId = it.getLong(index)
+
+                    if (albumId > 0) {
+                        val albumArtUri =
+                            Uri.parse("content://media/external/audio/albumart/$albumId")
+                        albumArtImageView.setImageURI(albumArtUri)
+                        return
+                    }
+                }
+            }
+        }
     }
 
-    fun updateSeekBar() {
+    fun playMusic() {
+        if (!mediaPlayer.isPlaying) {
+            mediaPlayer.start()
+            updateSeek()
+        }
+    }
+
+    fun pauseMusic() {
+        if (mediaPlayer.isPlaying) mediaPlayer.pause()
+    }
+
+    fun nextTrack() {
+        currentIndex++
+        if (currentIndex >= audioFiles.size) currentIndex = 0
+        playTrack(currentIndex)
+    }
+
+    fun prevTrack() {
+        currentIndex--
+        if (currentIndex < 0) currentIndex = audioFiles.size - 1
+        playTrack(currentIndex)
+    }
+
+    fun updateSeek() {
         handler.postDelayed({
             if (mediaPlayer.isPlaying) {
                 seekBar.progress = mediaPlayer.currentPosition
-                updateSeekBar()
+                updateSeek()
             }
-        }, 1000)
+        }, 500)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayer.release()
+        handler.removeCallbacksAndMessages(null)
     }
 }
