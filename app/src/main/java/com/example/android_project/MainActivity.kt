@@ -1,5 +1,6 @@
 package com.example.android_project
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
@@ -10,6 +11,7 @@ import android.widget.Button
 import com.example.android_project.LocationActivity
 
 class MainActivity : AppCompatActivity() {
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -30,13 +32,13 @@ class MainActivity : AppCompatActivity() {
             val playerIntent = Intent(this, MediaPlayerActivity::class.java)
             startActivity(playerIntent)
         })
-        /*
-        val bGoToViews: Button = findViewById(R.id.bGoToViews)
+
+        val bGoToViews: Button = findViewById(R.id.bGoToSockets)
         bGoToViews.setOnClickListener({
-            val viewsIntent = Intent(this, ViewsActivity::class.java)
+            val viewsIntent = Intent(this, SocketsActivity::class.java)
             startActivity(viewsIntent)
         })
-        */
+
         val bGoToLocation: Button = findViewById(R.id.bGoToLocation)
         bGoToLocation.setOnClickListener({
             val locationIntent = Intent(this, LocationActivity::class.java)
