@@ -3,11 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Разрешения локации -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- Разрешение для плеера -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+    <!-- ВАЖНО: без этого сетевые подключения (TCP/ZeroMQ) могут не работать -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -20,11 +24,18 @@
         android:theme="@style/Theme.Androidproject">
 
         <activity
+            android:name=".SocketsActivity"
+            android:exported="false" />
+        <activity
             android:name=".LocationActivity"
             android:exported="false" />
         <activity
             android:name=".MediaPlayerActivity"
             android:exported="false" />
+        <activity
+            android:name=".CalculatorActivity"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -33,10 +44,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".CalculatorActivity"
-            android:exported="false" />
 
     </application>
-
 </manifest>

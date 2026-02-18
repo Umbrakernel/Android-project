@@ -35,10 +35,10 @@
         android:layout_marginBottom="16dp" />
 
     <Button
-        android:id="@+id/bGoToViews"
+        android:id="@+id/bGoToSockets"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Views"
+        android:text="Sockets"
         android:textColor="@android:color/white"
         android:backgroundTint="@android:color/holo_red_dark"
         android:layout_marginBottom="16dp" />
