@@ -1,45 +1,74 @@
 package com.example.android_project
 
 import android.Manifest
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.location.Location
-import android.location.LocationListener
-import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.android_project.MainActivity
-import com.example.android_project.R
-import org.json.JSONObject
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.example.android_project.BackgroundService
 
-class LocationActivity : LocationListener, AppCompatActivity()  {
-
-    val LOG_TAG: String = "LOCATION_ACTIVITY"
+class LocationActivity : AppCompatActivity() {
 
     companion object {
-        const val PERMISSION_REQUEST_ACCESS_LOCATION = 100
+        const val PERMISSION_REQUEST_CODE = 100
     }
 
-    lateinit var locationManager: LocationManager
     lateinit var bBackToMain: Button
+    lateinit var bStartTelemetry: Button
+    lateinit var bStopTelemetry: Button
 
     lateinit var tvLat: TextView
     lateinit var tvLon: TextView
     lateinit var tvAlt: TextView
     lateinit var tvTime: TextView
+    lateinit var tvAccuracy: TextView
+    lateinit var tvRsrp: TextView
+    lateinit var tvRsrq: TextView
+    lateinit var tvRssi: TextView
+    lateinit var tvRssnr: TextView
+    lateinit var tvNetworkType: TextView
+    lateinit var tvOperator: TextView
+
+    val bgReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val rsrp = intent?.getIntExtra("RSRP", Int.MIN_VALUE) ?: Int.MIN_VALUE
+            val rsrq = intent?.getIntExtra("RSRQ", Int.MIN_VALUE) ?: Int.MIN_VALUE
+            val rssi = intent?.getIntExtra("RSSI", Int.MIN_VALUE) ?: Int.MIN_VALUE
+            val rssnr = intent?.getFloatExtra("RSSNR", Float.NaN) ?: Float.NaN
+            val accuracy = intent?.getFloatExtra("Accuracy", -1f) ?: -1f
+            val latitude = intent?.getDoubleExtra("Latitude", Double.NaN) ?: Double.NaN
+            val longitude = intent?.getDoubleExtra("Longitude", Double.NaN) ?: Double.NaN
+            val altitude = intent?.getDoubleExtra("Altitude", Double.NaN) ?: Double.NaN
+            val timeMs = intent?.getLongExtra("TimeMs", -1L) ?: -1L
+            val networkType = intent?.getStringExtra("NetworkType") ?: "UNKNOWN"
+            val operatorName = intent?.getStringExtra("OperatorName") ?: "UNKNOWN"
+
+            tvLat.text = if (latitude.isNaN()) "Latitude: N/A" else "Latitude: $latitude"
+            tvLon.text = if (longitude.isNaN()) "Longitude: N/A" else "Longitude: $longitude"
+            tvAlt.text = if (altitude.isNaN()) "Altitude: N/A" else "Altitude: $altitude"
+            tvTime.text = if (timeMs < 0L) "Time: N/A" else "Time: $timeMs"
+            tvRsrp.text = if (rsrp == Int.MIN_VALUE) "RSRP: N/A" else "RSRP: $rsrp dBm"
+            tvRsrq.text = if (rsrq == Int.MIN_VALUE) "RSRQ: N/A" else "RSRQ: $rsrq dBm"
+            tvRssi.text = if (rssi == Int.MIN_VALUE) "RSSI: N/A" else "RSSI: $rssi dBm"
+            tvRssnr.text = if (rssnr.isNaN()) "RSSNR: N/A" else "RSSNR: $rssnr dBm"
+            tvAccuracy.text = if (accuracy < 0f) "Accuracy: N/A" else "Accuracy: $accuracy m"
+            tvNetworkType.text = "Network type: $networkType"
+            tvOperator.text = "Operator: $operatorName"
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,138 +82,102 @@ class LocationActivity : LocationListener, AppCompatActivity()  {
         }
 
         bBackToMain = findViewById(R.id.back_to_main)
-
-        locationManager = this.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        bStartTelemetry = findViewById(R.id.btn_start_telemetry)
+        bStopTelemetry = findViewById(R.id.btn_stop_telemetry)
 
         tvLat = findViewById(R.id.tv_lat)
         tvLon = findViewById(R.id.tv_lon)
         tvAlt = findViewById(R.id.tv_alt)
         tvTime = findViewById(R.id.tv_time)
-    }
+        tvAccuracy = findViewById(R.id.tv_accuracy)
+        tvRsrp = findViewById(R.id.tv_rsrp)
+        tvRsrq = findViewById(R.id.tv_rsrq)
+        tvRssi = findViewById(R.id.tv_rssi)
+        tvRssnr = findViewById(R.id.tv_rssnr)
+        tvNetworkType = findViewById(R.id.tv_network_type)
+        tvOperator = findViewById(R.id.tv_operator)
 
-    override fun onResume() {
-        super.onResume()
+        tvLat.text = "Latitude: -"
+        tvLon.text = "Longitude: -"
+        tvAlt.text = "Altitude: -"
 
         bBackToMain.setOnClickListener {
-            val backToMain = Intent(this, MainActivity::class.java)
-            startActivity(backToMain)
+            startActivity(Intent(this, MainActivity::class.java))
         }
 
-        updateCurrentLocation()
-    }
-
-    fun updateCurrentLocation() {
-
-        if(checkPermissions()) {
-            if(isLocationEnabled()) {
-
-                if (ActivityCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ) != PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    requestPermissions()
-                    return
-                }
-
-                val lastLoc = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                if (lastLoc != null) {
-                    onLocationChanged(lastLoc)
-                }
-
-                locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    1000L,
-                    1f,
-                    this
-                )
-
+        bStartTelemetry.setOnClickListener {
+            if (hasRequiredPermissions()) {
+                startBackgroundService()
+                Toast.makeText(this, "BackgroundService started", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(applicationContext, "Включите геолокацию в настройках", Toast.LENGTH_SHORT).show()
-                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                startActivity(intent)
+                requestPermissionsFromUser()
             }
-        } else {
-            Log.w(LOG_TAG, "разрешение на определение местоположения не дано")
-            tvLat.setText("Разрешение не дано")
-            tvLon.setText("Разрешение не дано")
-            tvAlt.setText("Разрешение не дано")
-            tvTime.setText("Разрешение не дано")
-            requestPermissions()
+        }
+
+        bStopTelemetry.setOnClickListener {
+            stopService(Intent(this, BackgroundService::class.java))
+            Toast.makeText(this, "BackgroundService stopped", Toast.LENGTH_SHORT).show()
         }
     }
 
-    fun requestPermissions() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ),
-            PERMISSION_REQUEST_ACCESS_LOCATION
-        )
+    override fun onStart() {
+        super.onStart()
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(bgReceiver, IntentFilter("BackGroundUpdate"))
     }
 
-    fun checkPermissions(): Boolean {
-        return ActivityCompat.checkSelfPermission(
+    override fun onStop() {
+        super.onStop()
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(bgReceiver)
+    }
+
+    fun startBackgroundService() {
+        val serviceIntent = Intent(this, BackgroundService::class.java)
+        ContextCompat.startForegroundService(this, serviceIntent)
+    }
+
+    fun hasRequiredPermissions(): Boolean {
+        val locationGranted = ActivityCompat.checkSelfPermission(
             this,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED &&
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED ||
                 ActivityCompat.checkSelfPermission(
                     this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
+                    Manifest.permission.ACCESS_COARSE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
-    }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        val phoneGranted = ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_PHONE_STATE
+        ) == PackageManager.PERMISSION_GRANTED
 
-        if(requestCode == PERMISSION_REQUEST_ACCESS_LOCATION) {
-            if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(applicationContext, "Разрешение дано", Toast.LENGTH_SHORT).show()
-                updateCurrentLocation()
-            } else {
-                Toast.makeText(applicationContext, "Отклонено", Toast.LENGTH_SHORT).show()
-            }
+        val notificationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
         }
+
+        return locationGranted && phoneGranted && notificationGranted
     }
 
-    fun isLocationEnabled(): Boolean {
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-    }
-    override fun onLocationChanged(location: Location) {
-
-        tvLat.setText(location.latitude.toString())
-        tvLon.setText(location.longitude.toString())
-        tvAlt.setText(location.altitude.toString())
-        tvTime.setText(location.time.toString())
-
-        saveJson(location)
-    }
-
-    fun saveJson(location: Location) {
-
-        val json = JSONObject(
-            mapOf(
-                "latitude" to location.latitude,
-                "longitude" to location.longitude,
-                "altitude" to location.altitude,
-                "time" to location.time
-            )
+    fun requestPermissionsFromUser() {
+        val permissions = mutableListOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.READ_PHONE_STATE
         )
 
-        val file = File(filesDir, "locations.json")
-        file.appendText(json.toString() + "\n")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions += Manifest.permission.POST_NOTIFICATIONS
+        }
 
-        Log.d(LOG_TAG, "Saved: $json")
+        ActivityCompat.requestPermissions(
+            this,
+            permissions.toTypedArray(),
+            PERMISSION_REQUEST_CODE
+        )
     }
 }

@@ -9,18 +9,17 @@
     android:background="@android:color/black"
     tools:context=".LocationActivity">
 
-    <!-- Верхняя панель -->
     <LinearLayout
-        android:id="@+id/topPanelLocation"
+        android:id="@+id/contentContainer"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_margin="16dp"
         android:padding="16dp"
         android:orientation="vertical"
         android:background="#1A1A1A"
-        android:gravity="center"
-        android:elevation="4dp"
+        android:gravity="start"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/controlPanelLocation"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -28,40 +27,107 @@
             android:id="@+id/tv_lat"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Latitude: "
+            android:text="Latitude: -"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"/>
+            android:textSize="17sp"
+            android:layout_marginBottom="8dp"/>
 
         <TextView
             android:id="@+id/tv_lon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Longitude: "
+            android:text="Longitude: -"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"/>
+            android:textSize="17sp"
+            android:layout_marginBottom="8dp"/>
 
         <TextView
             android:id="@+id/tv_alt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Altitude: "
+            android:text="Altitude: -"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"/>
+            android:textSize="17sp"
+            android:layout_marginBottom="8dp"/>
 
         <TextView
             android:id="@+id/tv_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Time: "
+            android:text="Time: -"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"/>
+            android:textSize="17sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Accuracy: -"
+            android:textColor="@android:color/white"
+            android:textSize="17sp"
+            android:layout_marginBottom="16dp"/>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#333333"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/tv_rsrp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RSRP: -"
+            android:textColor="@android:color/white"
+            android:textSize="17sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_rsrq"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RSRQ: -"
+            android:textColor="@android:color/white"
+            android:textSize="17sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_rssi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RSSI: -"
+            android:textColor="@android:color/white"
+            android:textSize="17sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_rssnr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RSSNR: -"
+            android:textColor="@android:color/white"
+            android:textSize="17sp"
+            android:layout_marginBottom="8dp"/>
+
+
+        <TextView
+            android:id="@+id/tv_network_type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Network type: -"
+            android:textColor="@android:color/white"
+            android:textSize="17sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_operator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Operator: -"
+            android:textColor="@android:color/white"
+            android:textSize="17sp"/>
+
     </LinearLayout>
 
     <LinearLayout
@@ -77,12 +143,29 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <Button
+            android:id="@+id/btn_start_telemetry"
+            android:layout_width="220dp"
+            android:layout_height="52dp"
+            android:backgroundTint="#0F7A31"
+            android:text="Start"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="10dp"/>
+
+        <Button
+            android:id="@+id/btn_stop_telemetry"
+            android:layout_width="220dp"
+            android:layout_height="52dp"
+            android:backgroundTint="#A73A12"
+            android:text="Stop"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="10dp"/>
+
+        <Button
             android:id="@+id/back_to_main"
-            android:layout_width="180dp"
-            android:layout_height="60dp"
+            android:layout_width="220dp"
+            android:layout_height="52dp"
             android:backgroundTint="#890C0C"
-            android:text="Назад"
-            android:textSize="18sp"
+            android:text="Back to main screen"
             android:textColor="@android:color/white"/>
     </LinearLayout>
 

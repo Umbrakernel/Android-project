@@ -36,7 +36,8 @@ android {
 }
 
 dependencies {
-
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
     implementation("org.zeromq:jeromq:0.5.3")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
